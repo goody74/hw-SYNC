@@ -1,35 +1,34 @@
 package ru.netology;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.stream.IntStream;
 
 public class Main {
     public static final Map<Integer, Integer> sizeToFreq = new HashMap<>();
-    private static int aFound;
-    private static int aCount;
 
     public static void main(String[] args) throws InterruptedException {
-        IntStream.range(0, 1000).forEach(i -> new Thread(() -> {
+        List<Thread> threadList = new ArrayList<>();
+        for (int i = 0; i < 1000; i++) {
+            Thread thread = new Thread(() -> {
 
-            String text = generateText("abaca", 100);
-            aFound = (int) IntStream
-                    .range(0, text.length())
-                    .filter((c) -> {
-                        return 'a' == text.charAt(c);
-                    }).count();
+                String text = generateText("abaca", 100);
+                int aFound = (int) IntStream
+                        .range(0, text.length())
+                        .filter((c) -> {
+                            return 'a' == text.charAt(c);
+                        }).count();
 
-            synchronized (sizeToFreq) {
-                aCount = sizeToFreq.getOrDefault(aFound, 0);
-                sizeToFreq.notify();
-            }
-
-            synchronized (sizeToFreq) {
-                sizeToFreq.put(aFound, aCount + 1);
-                sizeToFreq.notify();
-            }
-        }).start());
+                synchronized (sizeToFreq) {
+                    int aCount = sizeToFreq.getOrDefault(aFound, 0);
+                    sizeToFreq.put(aFound, aCount + 1);
+                }
+            });
+            thread.start();
+            threadList.add(thread);
+        }
+        for (Thread thread : threadList) {
+            thread.join();
+        }
 
         System.out.println("Самая частая частота " + maxFreq(sizeToFreq, 100)
                 + " встретилась " + sizeToFreq.get(maxFreq(sizeToFreq, 100)) + " раз.");
