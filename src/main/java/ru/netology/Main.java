@@ -8,24 +8,23 @@ public class Main {
 
     public static void main(String[] args) throws InterruptedException {
         List<Thread> threadList = new ArrayList<>();
-        for (int i = 0; i < 1000; i++) {
-            Thread thread = new Thread(() -> {
+        IntStream.range(0, 1000).mapToObj(i -> new Thread(() -> {
 
-                String text = generateText("abaca", 100);
-                int aFound = (int) IntStream
-                        .range(0, text.length())
-                        .filter((c) -> {
-                            return 'a' == text.charAt(c);
-                        }).count();
+            String text = generateText("abaca", 100);
+            int aFound = (int) IntStream
+                    .range(0, text.length())
+                    .filter((c) -> {
+                        return 'a' == text.charAt(c);
+                    }).count();
 
-                synchronized (sizeToFreq) {
-                    int aCount = sizeToFreq.getOrDefault(aFound, 0);
-                    sizeToFreq.put(aFound, aCount + 1);
-                }
-            });
+            synchronized (sizeToFreq) {
+                int aCount = sizeToFreq.getOrDefault(aFound, 0);
+                sizeToFreq.put(aFound, aCount + 1);
+            }
+        })).forEach(thread -> {
             thread.start();
             threadList.add(thread);
-        }
+        });
         for (Thread thread : threadList) {
             thread.join();
         }
